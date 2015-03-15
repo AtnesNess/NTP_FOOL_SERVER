@@ -35,8 +35,9 @@ def reply(server, data, addr, shift):
     trip_delay = receive_time - origin_time
     new_data = struct.pack(NTP_HEADER_FORMAT, tmp[0], tmp[1],
                            tmp[2], tmp[3], tmp[4],
-                           tmp[5], tmp[6],  int(receive_time), int(origin_time), int(receive_time),
-                           int(receive_time-trip_delay/2-shift))
+                           tmp[5], tmp[6],  int(origin_time-shift/2), int(origin_time),
+                           int(origin_time-Decimal(2/3)*shift),
+                           int(origin_time-Decimal(2/3)*shift+trip_delay))
     server.sendto(new_data, addr)
     # time.sleep(10) # if you need to check threading
 
