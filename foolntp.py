@@ -12,6 +12,19 @@ NTP_UTC_OFFSET = 2208988800
 TEMPLATE = (36, 2, 0, 238, 3602, 2077,
             b'\xc1\xbe\xe6A', 0, 0, 0, 0)
 
+def reply(server, data, addr, shift):
+    receive_time = Decimal((2 ** 32)*(time.time()+NTP_UTC_OFFSET-shift))
+    res = struct.unpack(NTP_HEADER_FORMAT, data)
+    tmp = TEMPLATE
+    origin_time = res[-1]
+    trip_delay = receive_time - origin_time
+    new_data = struct.pack(NTP_HEADER_FORMAT, tmp[0], tmp[1],
+                           tmp[2], tmp[3], tmp[4],
+                           tmp[5], tmp[6],  int(receive_time), int(origin_time), int(receive_time),
+                           int(receive_time-trip_delay/2))
+    server.sendto(new_data, addr)
+    # time.sleep(10) # if you need to check threading
+
 
 def reply(server, data, addr, shift):
     receive_time = Decimal((2 ** 32)*(time.time()+NTP_UTC_OFFSET))
