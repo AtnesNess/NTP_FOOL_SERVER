@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
  
 import argparse
@@ -186,12 +185,10 @@ def get_raw_packet(args):
             with socket(AF_INET, SOCK_DGRAM) as sock:
                 sock.sendto(request, address)
                 if select([sock], [], [], args.timeout)[0]:
-                    data = sock.recvfrom(DEFAULT_BUFFER_SIZE)[0]
-                    return data
+                    return sock.recvfrom(DEFAULT_BUFFER_SIZE)[0]
         except Exception:
             pass
         debug(args, "Attempt %d failed" % attempt)
-
  
  
 def get_time_string(time, show_utc):
@@ -220,8 +217,7 @@ def get_packet_hexdump(packet, show_utc):
 def get_clock_offset(packet):
     current_ntp_time = time() + NTP_UTC_OFFSET
     trip_delay = (packet.receive - packet.origin) / 2
-    print(current_ntp_time)
-    return Decimal(current_ntp_time) - packet.transmit - trip_delay
+    return (Decimal(current_ntp_time) - packet.transmit)/2 - trip_delay
  
  
 if __name__ == "__main__":
