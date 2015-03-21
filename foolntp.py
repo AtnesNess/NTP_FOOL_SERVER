@@ -21,20 +21,20 @@ def ntp_bytes_to_utc(value):
     return Decimal(value) / (2 ** 32) - NTP_UTC_OFFSET
 
 
-def reply(server, data, addr, shift):
-    receive_time = utc_to_ntp_bytes(time.time())
+def reply(server, data, addr, shift, receive_time):
+
     shift = (Decimal(shift)) * (2 ** 32)
     res = struct.unpack(NTP_HEADER_FORMAT, data)
     tmp = TEMPLATE
     origin_time = res[-1]
-    delay_time = receive_time - origin_time
+    calc_time = utc_to_ntp_bytes(time.time())
     new_data = struct.pack(NTP_HEADER_FORMAT, tmp[0], tmp[1],
                            tmp[2], tmp[3], tmp[4],
                            tmp[5], tmp[6],  int(origin_time-shift), int(origin_time),
-                           int(origin_time-shift),
-                           int(origin_time-shift+delay_time))
+                           int(receive_time-shift),
+                           int(calc_time-shift))
     server.sendto(new_data, addr)
-    time.sleep(10)  # if you need to check threading
+    # time.sleep(10)  # if you need to check threading
 
 
 def main(shift):
@@ -46,7 +46,8 @@ def main(shift):
 
     while True:
         data, addr = server.recvfrom(512)
-        t = threading.Thread(target=reply, args=(server, data, addr, shift))
+        receive_time = utc_to_ntp_bytes(time.time())
+        t = threading.Thread(target=reply, args=(server, data, addr, shift, receive_time))
         t.start()
     server.close()
 
